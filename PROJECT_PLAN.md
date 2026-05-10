@@ -314,6 +314,8 @@ Done when:
 
 Goal: Track what the user ate each day.
 
+Status: In progress. Daily meal logging for foods, recipes, and quick calorie items is being added with dashboard totals.
+
 Tasks:
 
 - Create `MealLog` and `MealLogItem` entities.

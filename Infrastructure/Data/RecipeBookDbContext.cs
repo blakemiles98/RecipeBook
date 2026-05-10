@@ -1,5 +1,6 @@
 using Domain.Modules.Foods;
 using Domain.Modules.Recipes;
+using Domain.Modules.Tracking;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data;
@@ -11,6 +12,10 @@ public sealed class RecipeBookDbContext(DbContextOptions<RecipeBookDbContext> op
     public DbSet<Recipe> Recipes => Set<Recipe>();
 
     public DbSet<RecipeIngredient> RecipeIngredients => Set<RecipeIngredient>();
+
+    public DbSet<MealLog> MealLogs => Set<MealLog>();
+
+    public DbSet<MealLogItem> MealLogItems => Set<MealLogItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -53,5 +58,24 @@ public sealed class RecipeBookDbContext(DbContextOptions<RecipeBookDbContext> op
         ingredient.HasKey(x => x.Id);
         ingredient.Property(x => x.FoodName).HasMaxLength(200).IsRequired();
         ingredient.Property(x => x.Unit).HasMaxLength(50).IsRequired();
+
+        var mealLog = modelBuilder.Entity<MealLog>();
+
+        mealLog.ToTable("MealLogs");
+        mealLog.HasKey(x => x.Id);
+        mealLog.HasIndex(x => x.Date).IsUnique();
+        mealLog.Property(x => x.Notes).HasMaxLength(500);
+        mealLog.HasMany(x => x.Items)
+            .WithOne()
+            .HasForeignKey(x => x.MealLogId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        var mealLogItem = modelBuilder.Entity<MealLogItem>();
+
+        mealLogItem.ToTable("MealLogItems");
+        mealLogItem.HasKey(x => x.Id);
+        mealLogItem.Property(x => x.MealGroup).HasConversion<string>().HasMaxLength(50);
+        mealLogItem.Property(x => x.QuickItemName).HasMaxLength(200);
+        mealLogItem.Property(x => x.Unit).HasMaxLength(50).IsRequired();
     }
 }

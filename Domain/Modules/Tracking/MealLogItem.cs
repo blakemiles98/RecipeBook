@@ -2,7 +2,9 @@ namespace Domain.Modules.Tracking;
 
 public sealed class MealLogItem
 {
-    public Guid Id { get; init; } = Guid.NewGuid();
+    public Guid Id { get; set; } = Guid.NewGuid();
+
+    public Guid MealLogId { get; set; }
 
     public MealGroup MealGroup { get; set; }
 
@@ -24,5 +26,5 @@ public sealed class MealLogItem
 
     public decimal FatGrams { get; set; }
 
-    public DateTimeOffset CreatedAt { get; init; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 }

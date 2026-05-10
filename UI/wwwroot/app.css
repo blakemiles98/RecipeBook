@@ -188,12 +188,24 @@ h1:focus {
 }
 
 .ingredient-row input,
-.ingredient-row select {
+.ingredient-row select,
+.settings-grid select,
+.wide-field select {
     border: 1px solid #cfc7bb;
     border-radius: 6px;
     font: inherit;
     min-height: 2.5rem;
     padding: 0.5rem 0.65rem;
+}
+
+.meal-groups {
+    display: grid;
+    gap: 1rem;
+}
+
+.meal-groups h3 {
+    font-size: 1rem;
+    margin: 0 0 0.5rem;
 }
 
 .editor-actions {

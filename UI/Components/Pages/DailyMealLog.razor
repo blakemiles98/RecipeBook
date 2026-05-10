@@ -1,0 +1,374 @@
+@page "/meal-log"
+@rendermode InteractiveServer
+@using Application.Modules.Foods
+@using Application.Modules.Recipes
+@using Application.Modules.Tracking
+@using Domain.Modules.Foods
+@using Domain.Modules.Recipes
+@using Domain.Modules.Tracking
+@inject IFoodCatalog FoodCatalog
+@inject IRecipeLibrary Recipes
+@inject IRecipeNutritionCalculator RecipeNutrition
+@inject IMealLogService MealLogs
+
+<PageTitle>Meal Log</PageTitle>
+
+<h1>Meal Log</h1>
+
+@if (!string.IsNullOrWhiteSpace(_message))
+{
+    <p class="status-message">@_message</p>
+}
+
+<section class="workspace-panel food-editor">
+    <h2>Log item</h2>
+
+    @if (_errors.Count > 0)
+    {
+        <div class="validation-summary">
+            @foreach (var error in _errors)
+            {
+                <p>@error</p>
+            }
+        </div>
+    }
+
+    <form @onsubmit="AddItemAsync" @onsubmit:preventDefault="true">
+        <div class="settings-grid">
+            <label>
+                Type
+                <select @bind="_entryType">
+                    <option value="@MealEntryType.Food">Food</option>
+                    <option value="@MealEntryType.Recipe">Recipe</option>
+                    <option value="@MealEntryType.Quick">Quick calories</option>
+                </select>
+            </label>
+            <label>
+                Meal
+                <select @bind="_editor.MealGroup">
+                    @foreach (var mealGroup in Enum.GetValues<MealGroup>())
+                    {
+                        <option value="@mealGroup">@mealGroup</option>
+                    }
+                </select>
+            </label>
+            <label>
+                Quantity
+                <input type="number" step="0.01" min="0" @bind="_editor.Quantity" />
+            </label>
+            <label>
+                Unit
+                <input @bind="_editor.Unit" />
+            </label>
+        </div>
+
+        @if (_entryType == MealEntryType.Food)
+        {
+            <label class="wide-field">
+                Food
+                <select @bind="_selectedFoodId">
+                    <option value="@Guid.Empty">Select food</option>
+                    @foreach (var food in _foods)
+                    {
+                        <option value="@food.Id">@food.Name (@food.ServingSize @food.ServingUnit)</option>
+                    }
+                </select>
+            </label>
+        }
+        else if (_entryType == MealEntryType.Recipe)
+        {
+            <label class="wide-field">
+                Recipe
+                <select @bind="_selectedRecipeId">
+                    <option value="@Guid.Empty">Select recipe</option>
+                    @foreach (var recipe in _recipes)
+                    {
+                        <option value="@recipe.Id">@recipe.Name</option>
+                    }
+                </select>
+            </label>
+        }
+        else
+        {
+            <div class="settings-grid">
+                <label>
+                    Name
+                    <input @bind="_editor.QuickItemName" />
+                </label>
+                <label>
+                    Calories
+                    <input type="number" step="0.01" min="0" @bind="_editor.Calories" />
+                </label>
+                <label>
+                    Protein grams
+                    <input type="number" step="0.01" min="0" @bind="_editor.ProteinGrams" />
+                </label>
+                <label>
+                    Carbs grams
+                    <input type="number" step="0.01" min="0" @bind="_editor.CarbohydrateGrams" />
+                </label>
+                <label>
+                    Fat grams
+                    <input type="number" step="0.01" min="0" @bind="_editor.FatGrams" />
+                </label>
+            </div>
+        }
+
+        <div class="toolbar editor-actions">
+            <button type="submit" class="primary-action">Add to log</button>
+        </div>
+    </form>
+</section>
+
+@if (_mealLog is null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <section class="metric-grid" aria-label="Meal log totals">
+        <div class="metric">
+            <span class="metric-label">Calories</span>
+            <strong>@Math.Round(_mealLog.Items.Sum(x => x.Calories))</strong>
+            <span>logged today</span>
+        </div>
+        <div class="metric">
+            <span class="metric-label">Protein</span>
+            <strong>@Math.Round(_mealLog.Items.Sum(x => x.ProteinGrams), 1) g</strong>
+            <span>logged today</span>
+        </div>
+        <div class="metric">
+            <span class="metric-label">Carbs</span>
+            <strong>@Math.Round(_mealLog.Items.Sum(x => x.CarbohydrateGrams), 1) g</strong>
+            <span>logged today</span>
+        </div>
+        <div class="metric">
+            <span class="metric-label">Fat</span>
+            <strong>@Math.Round(_mealLog.Items.Sum(x => x.FatGrams), 1) g</strong>
+            <span>logged today</span>
+        </div>
+    </section>
+
+    <section class="workspace-panel">
+        <h2>Today</h2>
+
+        @if (_mealLog.Items.Count == 0)
+        {
+            <p>No items logged yet.</p>
+        }
+        else
+        {
+            <div class="meal-groups">
+                @foreach (var group in Enum.GetValues<MealGroup>())
+                {
+                    var items = _mealLog.Items.Where(x => x.MealGroup == group).OrderBy(x => x.CreatedAt).ToList();
+                    <section>
+                        <h3>@group</h3>
+                        @if (items.Count == 0)
+                        {
+                            <p>No items.</p>
+                        }
+                        else
+                        {
+                            <div class="table-shell compact-results">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Quantity</th>
+                                            <th>Calories</th>
+                                            <th>Protein</th>
+                                            <th>Carbs</th>
+                                            <th>Fat</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in items)
+                                        {
+                                            <tr>
+                                                <td>@GetItemName(item)</td>
+                                                <td>@item.Quantity @item.Unit</td>
+                                                <td>@Math.Round(item.Calories)</td>
+                                                <td>@Math.Round(item.ProteinGrams, 1) g</td>
+                                                <td>@Math.Round(item.CarbohydrateGrams, 1) g</td>
+                                                <td>@Math.Round(item.FatGrams, 1) g</td>
+                                                <td class="row-actions">
+                                                    <button type="button" @onclick="() => DeleteItemAsync(item.Id)">Delete</button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </section>
+                }
+            </div>
+        }
+    </section>
+}
+
+@code {
+    private enum MealEntryType
+    {
+        Food,
+        Recipe,
+        Quick
+    }
+
+    private MealEntryType _entryType = MealEntryType.Food;
+    private Domain.Modules.Tracking.MealLog? _mealLog;
+    private IReadOnlyCollection<Food> _foods = [];
+    private IReadOnlyCollection<Recipe> _recipes = [];
+    private readonly Dictionary<Guid, Food> _foodLookup = [];
+    private readonly Dictionary<Guid, Recipe> _recipeLookup = [];
+    private readonly Dictionary<Guid, RecipeNutritionSummary> _recipeSummaries = [];
+    private MealLogEditor _editor = NewEditor();
+    private Guid _selectedFoodId;
+    private Guid _selectedRecipeId;
+    private string? _message;
+    private readonly List<string> _errors = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _foods = await FoodCatalog.GetRecentFoodsAsync();
+        _recipes = await Recipes.GetRecentRecipesAsync();
+
+        foreach (var food in _foods)
+        {
+            _foodLookup[food.Id] = food;
+        }
+
+        foreach (var recipe in _recipes)
+        {
+            _recipeLookup[recipe.Id] = recipe;
+            _recipeSummaries[recipe.Id] = await RecipeNutrition.CalculateTotalAsync(recipe);
+        }
+
+        await LoadMealLogAsync();
+    }
+
+    private async Task LoadMealLogAsync()
+    {
+        _mealLog = await MealLogs.GetOrCreateAsync(DateOnly.FromDateTime(DateTime.Today));
+    }
+
+    private async Task AddItemAsync()
+    {
+        _errors.Clear();
+        _message = null;
+
+        if (!HydrateEditor())
+        {
+            return;
+        }
+
+        await MealLogs.AddItemAsync(_editor);
+        _message = "Item logged.";
+        _editor = NewEditor();
+        _selectedFoodId = Guid.Empty;
+        _selectedRecipeId = Guid.Empty;
+        await LoadMealLogAsync();
+    }
+
+    private async Task DeleteItemAsync(Guid itemId)
+    {
+        var deleted = await MealLogs.DeleteItemAsync(itemId);
+        _message = deleted ? "Item removed." : "Item was not found.";
+        await LoadMealLogAsync();
+    }
+
+    private bool HydrateEditor()
+    {
+        _editor.Date = DateOnly.FromDateTime(DateTime.Today);
+
+        if (_editor.Quantity <= 0)
+        {
+            _errors.Add("Quantity must be greater than zero.");
+            return false;
+        }
+
+        if (_entryType == MealEntryType.Food)
+        {
+            if (!_foodLookup.TryGetValue(_selectedFoodId, out var food))
+            {
+                _errors.Add("Select a food.");
+                return false;
+            }
+
+            var isServingCount = string.IsNullOrWhiteSpace(_editor.Unit) ||
+                string.Equals(_editor.Unit, "serving", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(_editor.Unit, "servings", StringComparison.OrdinalIgnoreCase);
+            var multiplier = isServingCount || food.ServingSize <= 0 ? _editor.Quantity : _editor.Quantity / food.ServingSize;
+            _editor.FoodId = food.Id;
+            _editor.RecipeId = null;
+            _editor.QuickItemName = null;
+            _editor.Unit = isServingCount ? "serving" : _editor.Unit;
+            _editor.Calories = food.Nutrition.Calories * multiplier;
+            _editor.ProteinGrams = food.Nutrition.ProteinGrams * multiplier;
+            _editor.CarbohydrateGrams = food.Nutrition.CarbohydrateGrams * multiplier;
+            _editor.FatGrams = food.Nutrition.FatGrams * multiplier;
+            return true;
+        }
+
+        if (_entryType == MealEntryType.Recipe)
+        {
+            if (!_recipeLookup.TryGetValue(_selectedRecipeId, out var recipe) ||
+                !_recipeSummaries.TryGetValue(_selectedRecipeId, out var summary))
+            {
+                _errors.Add("Select a recipe.");
+                return false;
+            }
+
+            var servingDivisor = recipe.Servings <= 0 ? 1 : recipe.Servings;
+            var multiplier = _editor.Quantity / servingDivisor;
+            _editor.FoodId = null;
+            _editor.RecipeId = recipe.Id;
+            _editor.QuickItemName = null;
+            _editor.Unit = "serving";
+            _editor.Calories = summary.Calories * multiplier;
+            _editor.ProteinGrams = summary.ProteinGrams * multiplier;
+            _editor.CarbohydrateGrams = summary.CarbohydrateGrams * multiplier;
+            _editor.FatGrams = summary.FatGrams * multiplier;
+            return true;
+        }
+
+        if (string.IsNullOrWhiteSpace(_editor.QuickItemName))
+        {
+            _errors.Add("Enter a name for quick calories.");
+            return false;
+        }
+
+        _editor.FoodId = null;
+        _editor.RecipeId = null;
+        _editor.Unit = string.IsNullOrWhiteSpace(_editor.Unit) ? "serving" : _editor.Unit;
+
+        return true;
+    }
+
+    private string GetItemName(MealLogItem item)
+    {
+        if (item.FoodId is Guid foodId && _foodLookup.TryGetValue(foodId, out var food))
+        {
+            return food.Name;
+        }
+
+        if (item.RecipeId is Guid recipeId && _recipeLookup.TryGetValue(recipeId, out var recipe))
+        {
+            return recipe.Name;
+        }
+
+        return item.QuickItemName ?? "Quick item";
+    }
+
+    private static MealLogEditor NewEditor()
+    {
+        return new MealLogEditor
+        {
+            Date = DateOnly.FromDateTime(DateTime.Today),
+            Quantity = 1,
+            Unit = "serving"
+        };
+    }
+}

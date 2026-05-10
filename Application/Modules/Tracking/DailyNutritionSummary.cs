@@ -9,4 +9,5 @@ public sealed record DailyNutritionSummary(
     decimal CarbohydrateGrams,
     decimal CarbohydrateGoalGrams,
     decimal FatGrams,
-    decimal FatGoalGrams);
+    decimal FatGoalGrams,
+    int LoggedItemCount = 0);

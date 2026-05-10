@@ -9,6 +9,7 @@ public sealed class DatabaseInitializer(RecipeBookDbContext dbContext)
     {
         await dbContext.Database.EnsureCreatedAsync(cancellationToken);
         await EnsureRecipeTablesAsync(cancellationToken);
+        await EnsureTrackingTablesAsync(cancellationToken);
 
         if (await dbContext.Foods.AnyAsync(cancellationToken))
         {
@@ -72,6 +73,54 @@ public sealed class DatabaseInitializer(RecipeBookDbContext dbContext)
         await dbContext.Database.ExecuteSqlRawAsync(
             """
             CREATE INDEX IF NOT EXISTS "IX_RecipeIngredients_RecipeId" ON "RecipeIngredients" ("RecipeId");
+            """,
+            cancellationToken);
+    }
+
+    private async Task EnsureTrackingTablesAsync(CancellationToken cancellationToken)
+    {
+        await dbContext.Database.ExecuteSqlRawAsync(
+            """
+            CREATE TABLE IF NOT EXISTS "MealLogs" (
+                "Id" TEXT NOT NULL CONSTRAINT "PK_MealLogs" PRIMARY KEY,
+                "Date" TEXT NOT NULL,
+                "Notes" TEXT NULL,
+                "CreatedAt" TEXT NOT NULL,
+                "UpdatedAt" TEXT NOT NULL
+            );
+            """,
+            cancellationToken);
+
+        await dbContext.Database.ExecuteSqlRawAsync(
+            """
+            CREATE UNIQUE INDEX IF NOT EXISTS "IX_MealLogs_Date" ON "MealLogs" ("Date");
+            """,
+            cancellationToken);
+
+        await dbContext.Database.ExecuteSqlRawAsync(
+            """
+            CREATE TABLE IF NOT EXISTS "MealLogItems" (
+                "Id" TEXT NOT NULL CONSTRAINT "PK_MealLogItems" PRIMARY KEY,
+                "MealLogId" TEXT NOT NULL,
+                "MealGroup" TEXT NOT NULL,
+                "FoodId" TEXT NULL,
+                "RecipeId" TEXT NULL,
+                "QuickItemName" TEXT NULL,
+                "Quantity" TEXT NOT NULL,
+                "Unit" TEXT NOT NULL,
+                "Calories" TEXT NOT NULL,
+                "ProteinGrams" TEXT NOT NULL,
+                "CarbohydrateGrams" TEXT NOT NULL,
+                "FatGrams" TEXT NOT NULL,
+                "CreatedAt" TEXT NOT NULL,
+                CONSTRAINT "FK_MealLogItems_MealLogs_MealLogId" FOREIGN KEY ("MealLogId") REFERENCES "MealLogs" ("Id") ON DELETE CASCADE
+            );
+            """,
+            cancellationToken);
+
+        await dbContext.Database.ExecuteSqlRawAsync(
+            """
+            CREATE INDEX IF NOT EXISTS "IX_MealLogItems_MealLogId" ON "MealLogItems" ("MealLogId");
             """,
             cancellationToken);
     }

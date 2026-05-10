@@ -5,6 +5,7 @@ using Application.Modules.Tracking;
 using Infrastructure.Data;
 using Infrastructure.Modules.Foods;
 using Infrastructure.Modules.Recipes;
+using Infrastructure.Modules.Tracking;
 using UI.Components;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,7 +22,7 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddFoodStorage(builder.Configuration, builder.Environment.ContentRootPath);
 builder.Services.AddRecipeStorage();
-builder.Services.AddScoped<ITrackingSummary, TrackingSummaryPlaceholder>();
+builder.Services.AddTrackingStorage();
 
 var app = builder.Build();
 
