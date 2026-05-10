@@ -10,6 +10,7 @@ public sealed class DatabaseInitializer(RecipeBookDbContext dbContext)
         await dbContext.Database.EnsureCreatedAsync(cancellationToken);
         await EnsureRecipeTablesAsync(cancellationToken);
         await EnsureTrackingTablesAsync(cancellationToken);
+        await EnsureSettingsTableAsync(cancellationToken);
 
         if (await dbContext.Foods.AnyAsync(cancellationToken))
         {
@@ -121,6 +122,23 @@ public sealed class DatabaseInitializer(RecipeBookDbContext dbContext)
         await dbContext.Database.ExecuteSqlRawAsync(
             """
             CREATE INDEX IF NOT EXISTS "IX_MealLogItems_MealLogId" ON "MealLogItems" ("MealLogId");
+            """,
+            cancellationToken);
+    }
+
+    private async Task EnsureSettingsTableAsync(CancellationToken cancellationToken)
+    {
+        await dbContext.Database.ExecuteSqlRawAsync(
+            """
+            CREATE TABLE IF NOT EXISTS "UserSettings" (
+                "Id" TEXT NOT NULL CONSTRAINT "PK_UserSettings" PRIMARY KEY,
+                "DailyCalorieGoal" TEXT NOT NULL,
+                "DailyProteinGoalGrams" TEXT NOT NULL,
+                "DailyCarbohydrateGoalGrams" TEXT NOT NULL,
+                "DailyFatGoalGrams" TEXT NOT NULL,
+                "PreferredUnits" TEXT NOT NULL,
+                "UpdatedAt" TEXT NOT NULL
+            );
             """,
             cancellationToken);
     }

@@ -17,6 +17,8 @@ public sealed class RecipeBookDbContext(DbContextOptions<RecipeBookDbContext> op
 
     public DbSet<MealLogItem> MealLogItems => Set<MealLogItem>();
 
+    public DbSet<UserSettings> UserSettings => Set<UserSettings>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         var food = modelBuilder.Entity<Food>();
@@ -77,5 +79,11 @@ public sealed class RecipeBookDbContext(DbContextOptions<RecipeBookDbContext> op
         mealLogItem.Property(x => x.MealGroup).HasConversion<string>().HasMaxLength(50);
         mealLogItem.Property(x => x.QuickItemName).HasMaxLength(200);
         mealLogItem.Property(x => x.Unit).HasMaxLength(50).IsRequired();
+
+        var userSettings = modelBuilder.Entity<UserSettings>();
+
+        userSettings.ToTable("UserSettings");
+        userSettings.HasKey(x => x.Id);
+        userSettings.Property(x => x.PreferredUnits).HasMaxLength(30).IsRequired();
     }
 }

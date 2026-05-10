@@ -335,6 +335,8 @@ Done when:
 
 Goal: Make the calorie tracker useful at a glance.
 
+Status: In progress. Calorie and macro goals are now saved locally and used by the dashboard.
+
 Tasks:
 
 - Create `UserSettings` entity.

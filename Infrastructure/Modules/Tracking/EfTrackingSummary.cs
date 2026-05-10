@@ -9,6 +9,7 @@ public sealed class EfTrackingSummary(RecipeBookDbContext dbContext) : ITracking
     public async Task<DailyNutritionSummary> GetTodayAsync(CancellationToken cancellationToken = default)
     {
         var today = DateOnly.FromDateTime(DateTime.Today);
+        var settings = await dbContext.UserSettings.FirstOrDefaultAsync(cancellationToken) ?? new Domain.Modules.Tracking.UserSettings();
         var log = await dbContext.MealLogs
             .AsNoTracking()
             .Include(x => x.Items)
@@ -19,14 +20,13 @@ public sealed class EfTrackingSummary(RecipeBookDbContext dbContext) : ITracking
         return new DailyNutritionSummary(
             today,
             Calories: items.Sum(x => x.Calories),
-            CalorieGoal: 2200,
+            CalorieGoal: settings.DailyCalorieGoal,
             ProteinGrams: items.Sum(x => x.ProteinGrams),
-            ProteinGoalGrams: 160,
+            ProteinGoalGrams: settings.DailyProteinGoalGrams,
             CarbohydrateGrams: items.Sum(x => x.CarbohydrateGrams),
-            CarbohydrateGoalGrams: 220,
+            CarbohydrateGoalGrams: settings.DailyCarbohydrateGoalGrams,
             FatGrams: items.Sum(x => x.FatGrams),
-            FatGoalGrams: 70,
+            FatGoalGrams: settings.DailyFatGoalGrams,
             LoggedItemCount: items.Count);
     }
 }
-

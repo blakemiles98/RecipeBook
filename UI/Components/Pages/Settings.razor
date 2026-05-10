@@ -1,24 +1,105 @@
 @page "/settings"
+@rendermode InteractiveServer
+@using Application.Modules.Tracking
+@inject IGoalSettingsService GoalSettings
 
 <PageTitle>Settings</PageTitle>
 
 <h1>Settings</h1>
 
-<section class="settings-grid">
-    <label>
-        Daily calorie goal
-        <input type="number" value="2200" />
-    </label>
-    <label>
-        Protein goal
-        <input type="number" value="160" />
-    </label>
-    <label>
-        Carbohydrate goal
-        <input type="number" value="220" />
-    </label>
-    <label>
-        Fat goal
-        <input type="number" value="70" />
-    </label>
-</section>
+@if (!string.IsNullOrWhiteSpace(_message))
+{
+    <p class="status-message">@_message</p>
+}
+
+@if (_editor is null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    @if (_errors.Count > 0)
+    {
+        <div class="validation-summary">
+            @foreach (var error in _errors)
+            {
+                <p>@error</p>
+            }
+        </div>
+    }
+
+    <form @onsubmit="SaveAsync" @onsubmit:preventDefault="true">
+        <section class="settings-grid">
+            <label>
+                Daily calorie goal
+                <input type="number" step="1" min="0" @bind="_editor.DailyCalorieGoal" />
+            </label>
+            <label>
+                Protein goal
+                <input type="number" step="1" min="0" @bind="_editor.DailyProteinGoalGrams" />
+            </label>
+            <label>
+                Carbohydrate goal
+                <input type="number" step="1" min="0" @bind="_editor.DailyCarbohydrateGoalGrams" />
+            </label>
+            <label>
+                Fat goal
+                <input type="number" step="1" min="0" @bind="_editor.DailyFatGoalGrams" />
+            </label>
+            <label>
+                Preferred units
+                <select @bind="_editor.PreferredUnits">
+                    <option value="US">US</option>
+                    <option value="Metric">Metric</option>
+                </select>
+            </label>
+        </section>
+
+        <div class="toolbar editor-actions">
+            <button type="submit" class="primary-action">Save settings</button>
+        </div>
+    </form>
+}
+
+@code {
+    private GoalSettingsEditor? _editor;
+    private string? _message;
+    private readonly List<string> _errors = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        var settings = await GoalSettings.GetAsync();
+        _editor = GoalSettingsEditor.FromSettings(settings);
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_editor is null)
+        {
+            return;
+        }
+
+        _errors.Clear();
+        _message = null;
+
+        if (_editor.DailyCalorieGoal <= 0)
+        {
+            _errors.Add("Daily calorie goal must be greater than zero.");
+        }
+
+        if (_editor.DailyProteinGoalGrams < 0 ||
+            _editor.DailyCarbohydrateGoalGrams < 0 ||
+            _editor.DailyFatGoalGrams < 0)
+        {
+            _errors.Add("Macro goals cannot be negative.");
+        }
+
+        if (_errors.Count > 0)
+        {
+            return;
+        }
+
+        await GoalSettings.SaveAsync(_editor);
+        _message = "Settings saved.";
+    }
+}
