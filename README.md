@@ -19,3 +19,5 @@ dotnet run --project UI/UI.csproj --no-launch-profile --urls http://localhost:52
 ```
 
 The app creates a local SQLite database at `UI/App_Data/RecipeBook.db`.
+
+For USDA FoodData Central search, set `Nutrition:Usda:ApiKey` in user secrets or environment variables. If it is not set, the app uses USDA's low-rate `DEMO_KEY`.

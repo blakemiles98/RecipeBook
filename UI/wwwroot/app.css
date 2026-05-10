@@ -139,6 +139,33 @@ h1:focus {
     margin: 1rem 0 0;
 }
 
+.search-row {
+    align-items: end;
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: minmax(220px, 1fr) auto;
+    margin-bottom: 1rem;
+}
+
+.search-row label {
+    color: #514840;
+    display: grid;
+    font-weight: 700;
+    gap: 0.4rem;
+}
+
+.search-row input {
+    border: 1px solid #cfc7bb;
+    border-radius: 6px;
+    font: inherit;
+    min-height: 2.5rem;
+    padding: 0.5rem 0.65rem;
+}
+
+.compact-results {
+    box-shadow: none;
+}
+
 .table-shell {
     overflow-x: auto;
 }
@@ -259,5 +286,9 @@ td span {
     .list-item dl {
         align-items: flex-start;
         flex-direction: column;
+    }
+
+    .search-row {
+        grid-template-columns: 1fr;
     }
 }

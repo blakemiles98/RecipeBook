@@ -30,6 +30,10 @@ public static class FoodsInfrastructure
         services.AddDbContext<RecipeBookDbContext>(options => options.UseSqlite(connectionString));
         services.AddScoped<DatabaseInitializer>();
         services.AddScoped<IFoodCatalog, EfFoodCatalog>();
+        services.AddHttpClient<IFoodSearchProvider, UsdaFoodDataCentralClient>(client =>
+        {
+            client.BaseAddress = new Uri("https://api.nal.usda.gov/fdc/v1/");
+        });
 
         return services;
     }

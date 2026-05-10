@@ -61,4 +61,24 @@ public sealed class FoodEditor
             ExternalId = food.ExternalId
         };
     }
+
+    public static FoodEditor FromSearchResult(FoodSearchResult result)
+    {
+        return new FoodEditor
+        {
+            Name = result.Name,
+            Brand = result.Brand,
+            ServingSize = result.ServingSize,
+            ServingUnit = result.ServingUnit,
+            Calories = result.Calories,
+            ProteinGrams = result.ProteinGrams,
+            CarbohydrateGrams = result.CarbohydrateGrams,
+            FatGrams = result.FatGrams,
+            FiberGrams = result.FiberGrams,
+            SugarGrams = result.SugarGrams,
+            SodiumMilligrams = result.SodiumMilligrams,
+            Source = FoodSource.UsdaFoodDataCentral,
+            ExternalId = result.ExternalId
+        };
+    }
 }

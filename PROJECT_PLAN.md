@@ -271,6 +271,8 @@ Done when:
 
 Goal: Import foods from external nutrition APIs.
 
+Status: In progress. USDA FoodData Central search and import are being added first.
+
 Tasks:
 
 - Add USDA FoodData Central client.

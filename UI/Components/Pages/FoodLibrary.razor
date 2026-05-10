@@ -3,6 +3,7 @@
 @using Application.Modules.Foods
 @using Domain.Modules.Foods
 @inject IFoodCatalog FoodCatalog
+@inject IFoodSearchProvider FoodSearchProvider
 
 <PageTitle>Foods</PageTitle>
 
@@ -10,12 +11,80 @@
 
 <section class="toolbar">
     <button type="button" class="primary-action" @onclick="StartCreate">Add food</button>
-    <button type="button" disabled>Search nutrition APIs</button>
+    <button type="button" @onclick="ToggleSearch">Search nutrition APIs</button>
 </section>
 
 @if (!string.IsNullOrWhiteSpace(_message))
 {
     <p class="status-message">@_message</p>
+}
+
+@if (_showSearch)
+{
+    <section class="workspace-panel food-editor">
+        <h2>Search USDA foods</h2>
+
+        <form @onsubmit="SearchFoodsAsync" @onsubmit:preventDefault="true">
+            <div class="search-row">
+                <label>
+                    Search
+                    <input @bind="_searchQuery" />
+                </label>
+                <button type="submit" class="primary-action" disabled="@_isSearching">
+                    @(_isSearching ? "Searching..." : "Search")
+                </button>
+            </div>
+        </form>
+
+        @if (!string.IsNullOrWhiteSpace(_searchError))
+        {
+            <div class="validation-summary">
+                <p>@_searchError</p>
+            </div>
+        }
+
+        @if (_searchResults.Count > 0)
+        {
+            <div class="table-shell compact-results">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Serving</th>
+                            <th>Calories</th>
+                            <th>Protein</th>
+                            <th>Carbs</th>
+                            <th>Fat</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var result in _searchResults)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@result.Name</strong>
+                                    @if (!string.IsNullOrWhiteSpace(result.Brand))
+                                    {
+                                        <span>@result.Brand</span>
+                                    }
+                                    <span>@result.SourceProvider ID @result.ExternalId</span>
+                                </td>
+                                <td>@result.ServingSize @result.ServingUnit</td>
+                                <td>@result.Calories</td>
+                                <td>@result.ProteinGrams g</td>
+                                <td>@result.CarbohydrateGrams g</td>
+                                <td>@result.FatGrams g</td>
+                                <td class="row-actions">
+                                    <button type="button" @onclick="() => ImportFoodAsync(result)">Import</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
 }
 
 @if (_showEditor)
@@ -145,9 +214,14 @@ else
 @code {
     private IReadOnlyCollection<Food>? _foods;
     private FoodEditor _editor = NewEditor();
+    private IReadOnlyCollection<FoodSearchResult> _searchResults = [];
     private Guid? _editingFoodId;
     private bool _showEditor;
+    private bool _showSearch;
+    private bool _isSearching;
     private string? _message;
+    private string? _searchQuery;
+    private string? _searchError;
     private readonly List<string> _errors = [];
 
     protected override async Task OnInitializedAsync()
@@ -167,6 +241,51 @@ else
         _showEditor = true;
         _message = null;
         _errors.Clear();
+    }
+
+    private void ToggleSearch()
+    {
+        _showSearch = !_showSearch;
+        _searchError = null;
+        _message = null;
+    }
+
+    private async Task SearchFoodsAsync()
+    {
+        _searchError = null;
+        _message = null;
+
+        if (string.IsNullOrWhiteSpace(_searchQuery))
+        {
+            _searchError = "Enter a food name to search.";
+            return;
+        }
+
+        try
+        {
+            _isSearching = true;
+            _searchResults = await FoodSearchProvider.SearchAsync(_searchQuery);
+
+            if (_searchResults.Count == 0)
+            {
+                _searchError = "No USDA foods matched that search.";
+            }
+        }
+        catch (HttpRequestException)
+        {
+            _searchError = "USDA search is unavailable right now. Check your connection or API key.";
+        }
+        finally
+        {
+            _isSearching = false;
+        }
+    }
+
+    private async Task ImportFoodAsync(FoodSearchResult result)
+    {
+        await FoodCatalog.CreateFoodAsync(FoodEditor.FromSearchResult(result));
+        _message = "Food imported.";
+        await LoadFoodsAsync();
     }
 
     private void StartEdit(Food food)
