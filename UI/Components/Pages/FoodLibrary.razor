@@ -1,4 +1,5 @@
 @page "/foods"
+@rendermode InteractiveServer
 @using Application.Modules.Foods
 @using Domain.Modules.Foods
 @inject IFoodCatalog FoodCatalog
@@ -8,13 +9,96 @@
 <h1>Foods</h1>
 
 <section class="toolbar">
-    <button type="button" class="primary-action">Add food</button>
-    <button type="button">Search nutrition APIs</button>
+    <button type="button" class="primary-action" @onclick="StartCreate">Add food</button>
+    <button type="button" disabled>Search nutrition APIs</button>
 </section>
+
+@if (!string.IsNullOrWhiteSpace(_message))
+{
+    <p class="status-message">@_message</p>
+}
+
+@if (_showEditor)
+{
+    <section class="workspace-panel food-editor">
+        <h2>@(_editingFoodId is null ? "Add food" : "Edit food")</h2>
+
+        @if (_errors.Count > 0)
+        {
+            <div class="validation-summary">
+                @foreach (var error in _errors)
+                {
+                    <p>@error</p>
+                }
+            </div>
+        }
+
+        <form @onsubmit="SaveFoodAsync" @onsubmit:preventDefault="true">
+            <div class="settings-grid">
+                <label>
+                    Name
+                    <input @bind="_editor.Name" />
+                </label>
+                <label>
+                    Brand
+                    <input @bind="_editor.Brand" />
+                </label>
+                <label>
+                    Serving size
+                    <input type="number" step="0.01" min="0" @bind="_editor.ServingSize" />
+                </label>
+                <label>
+                    Serving unit
+                    <input @bind="_editor.ServingUnit" />
+                </label>
+                <label>
+                    Calories
+                    <input type="number" step="0.01" min="0" @bind="_editor.Calories" />
+                </label>
+                <label>
+                    Protein grams
+                    <input type="number" step="0.01" min="0" @bind="_editor.ProteinGrams" />
+                </label>
+                <label>
+                    Carbohydrate grams
+                    <input type="number" step="0.01" min="0" @bind="_editor.CarbohydrateGrams" />
+                </label>
+                <label>
+                    Fat grams
+                    <input type="number" step="0.01" min="0" @bind="_editor.FatGrams" />
+                </label>
+                <label>
+                    Fiber grams
+                    <input type="number" step="0.01" min="0" @bind="_editor.FiberGrams" />
+                </label>
+                <label>
+                    Sugar grams
+                    <input type="number" step="0.01" min="0" @bind="_editor.SugarGrams" />
+                </label>
+                <label>
+                    Sodium milligrams
+                    <input type="number" step="0.01" min="0" @bind="_editor.SodiumMilligrams" />
+                </label>
+            </div>
+
+            <div class="toolbar editor-actions">
+                <button type="submit" class="primary-action">Save food</button>
+                <button type="button" @onclick="CancelEdit">Cancel</button>
+            </div>
+        </form>
+    </section>
+}
 
 @if (_foods is null)
 {
     <p>Loading...</p>
+}
+else if (_foods.Count == 0)
+{
+    <section class="workspace-panel">
+        <h2>No foods yet</h2>
+        <p>Add foods manually here. API search will arrive in the next nutrition integration slice.</p>
+    </section>
 }
 else
 {
@@ -28,6 +112,7 @@ else
                     <th>Protein</th>
                     <th>Carbs</th>
                     <th>Fat</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -46,6 +131,10 @@ else
                         <td>@food.Nutrition.ProteinGrams g</td>
                         <td>@food.Nutrition.CarbohydrateGrams g</td>
                         <td>@food.Nutrition.FatGrams g</td>
+                        <td class="row-actions">
+                            <button type="button" @onclick="() => StartEdit(food)">Edit</button>
+                            <button type="button" @onclick="() => DeleteFoodAsync(food.Id)">Delete</button>
+                        </td>
                     </tr>
                 }
             </tbody>
@@ -55,9 +144,116 @@ else
 
 @code {
     private IReadOnlyCollection<Food>? _foods;
+    private FoodEditor _editor = NewEditor();
+    private Guid? _editingFoodId;
+    private bool _showEditor;
+    private string? _message;
+    private readonly List<string> _errors = [];
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadFoodsAsync();
+    }
+
+    private async Task LoadFoodsAsync()
+    {
         _foods = await FoodCatalog.GetRecentFoodsAsync();
+    }
+
+    private void StartCreate()
+    {
+        _editor = NewEditor();
+        _editingFoodId = null;
+        _showEditor = true;
+        _message = null;
+        _errors.Clear();
+    }
+
+    private void StartEdit(Food food)
+    {
+        _editor = FoodEditor.FromFood(food);
+        _editingFoodId = food.Id;
+        _showEditor = true;
+        _message = null;
+        _errors.Clear();
+    }
+
+    private void CancelEdit()
+    {
+        _showEditor = false;
+        _editingFoodId = null;
+        _editor = NewEditor();
+        _errors.Clear();
+    }
+
+    private async Task SaveFoodAsync()
+    {
+        _errors.Clear();
+
+        if (!ValidateEditor())
+        {
+            return;
+        }
+
+        if (_editingFoodId is Guid id)
+        {
+            var updated = await FoodCatalog.UpdateFoodAsync(id, _editor);
+            _message = updated ? "Food updated." : "Food was not found.";
+        }
+        else
+        {
+            await FoodCatalog.CreateFoodAsync(_editor);
+            _message = "Food added.";
+        }
+
+        CancelEdit();
+        await LoadFoodsAsync();
+    }
+
+    private async Task DeleteFoodAsync(Guid id)
+    {
+        var deleted = await FoodCatalog.DeleteFoodAsync(id);
+        _message = deleted ? "Food deleted." : "Food was not found.";
+        await LoadFoodsAsync();
+    }
+
+    private bool ValidateEditor()
+    {
+        if (string.IsNullOrWhiteSpace(_editor.Name))
+        {
+            _errors.Add("Name is required.");
+        }
+
+        if (_editor.ServingSize <= 0)
+        {
+            _errors.Add("Serving size must be greater than zero.");
+        }
+
+        if (string.IsNullOrWhiteSpace(_editor.ServingUnit))
+        {
+            _errors.Add("Serving unit is required.");
+        }
+
+        if (_editor.Calories < 0 ||
+            _editor.ProteinGrams < 0 ||
+            _editor.CarbohydrateGrams < 0 ||
+            _editor.FatGrams < 0 ||
+            _editor.FiberGrams < 0 ||
+            _editor.SugarGrams < 0 ||
+            _editor.SodiumMilligrams < 0)
+        {
+            _errors.Add("Nutrition values cannot be negative.");
+        }
+
+        return _errors.Count == 0;
+    }
+
+    private static FoodEditor NewEditor()
+    {
+        return new FoodEditor
+        {
+            ServingSize = 1,
+            ServingUnit = "serving"
+        };
     }
 }

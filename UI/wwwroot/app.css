@@ -110,6 +110,35 @@ h1:focus {
     padding: 1rem;
 }
 
+.status-message {
+    background: #e7f1ea;
+    border: 1px solid #bdd5c6;
+    border-radius: 6px;
+    color: #285f51;
+    padding: 0.75rem 1rem;
+}
+
+.validation-summary {
+    background: #fff0ef;
+    border: 1px solid #e3b7b4;
+    border-radius: 6px;
+    color: #8a312a;
+    margin-bottom: 1rem;
+    padding: 0.75rem 1rem;
+}
+
+.validation-summary p {
+    margin: 0.2rem 0;
+}
+
+.food-editor {
+    margin-bottom: 1rem;
+}
+
+.editor-actions {
+    margin: 1rem 0 0;
+}
+
 .table-shell {
     overflow-x: auto;
 }
@@ -137,6 +166,12 @@ td span {
     color: #73695f;
     display: block;
     font-size: 0.9rem;
+}
+
+.row-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
 }
 
 .item-list {

@@ -251,6 +251,8 @@ Done when:
 
 Goal: Save and manage nutrition items locally.
 
+Status: In progress. Local SQLite-backed food storage and manual food CRUD are being added before nutrition API import.
+
 Tasks:
 
 - Create `Food` entity.

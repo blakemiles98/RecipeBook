@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.DataProtection;
 using Application.Modules.Foods;
 using Application.Modules.Recipes;
 using Application.Modules.Tracking;
+using Infrastructure.Data;
+using Infrastructure.Modules.Foods;
 using UI.Components;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,11 +18,17 @@ builder.Services.AddDataProtection()
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddScoped<IFoodCatalog, FoodCatalogPlaceholder>();
+builder.Services.AddFoodStorage(builder.Configuration, builder.Environment.ContentRootPath);
 builder.Services.AddScoped<IRecipeLibrary, RecipeLibraryPlaceholder>();
 builder.Services.AddScoped<ITrackingSummary, TrackingSummaryPlaceholder>();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var database = scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
+    await database.InitializeAsync();
+}
 
 if (!app.Environment.IsDevelopment())
 {

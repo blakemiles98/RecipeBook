@@ -1,15 +1,44 @@
 namespace Domain.Modules.Foods;
 
-public sealed record NutritionFacts(
-    decimal Calories,
-    decimal ProteinGrams,
-    decimal CarbohydrateGrams,
-    decimal FatGrams,
-    decimal FiberGrams,
-    decimal SugarGrams,
-    decimal SodiumMilligrams)
+public sealed class NutritionFacts
 {
+    private NutritionFacts()
+    {
+    }
+
+    public NutritionFacts(
+        decimal calories,
+        decimal proteinGrams,
+        decimal carbohydrateGrams,
+        decimal fatGrams,
+        decimal fiberGrams,
+        decimal sugarGrams,
+        decimal sodiumMilligrams)
+    {
+        Calories = calories;
+        ProteinGrams = proteinGrams;
+        CarbohydrateGrams = carbohydrateGrams;
+        FatGrams = fatGrams;
+        FiberGrams = fiberGrams;
+        SugarGrams = sugarGrams;
+        SodiumMilligrams = sodiumMilligrams;
+    }
+
     public static NutritionFacts Empty { get; } = new(0, 0, 0, 0, 0, 0, 0);
+
+    public decimal Calories { get; private set; }
+
+    public decimal ProteinGrams { get; private set; }
+
+    public decimal CarbohydrateGrams { get; private set; }
+
+    public decimal FatGrams { get; private set; }
+
+    public decimal FiberGrams { get; private set; }
+
+    public decimal SugarGrams { get; private set; }
+
+    public decimal SodiumMilligrams { get; private set; }
 
     public NutritionFacts Scale(decimal multiplier)
     {

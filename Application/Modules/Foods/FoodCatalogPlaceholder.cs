@@ -27,4 +27,35 @@ public sealed class FoodCatalogPlaceholder : IFoodCatalog
 
         return Task.FromResult(foods);
     }
+
+    public Task<Food?> GetFoodAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult<Food?>(null);
+    }
+
+    public Task<Food> CreateFoodAsync(FoodEditor food, CancellationToken cancellationToken = default)
+    {
+        var savedFood = new Food
+        {
+            Name = food.Name,
+            Brand = food.Brand,
+            ServingSize = food.ServingSize,
+            ServingUnit = food.ServingUnit,
+            Nutrition = food.ToNutritionFacts(),
+            Source = food.Source,
+            ExternalId = food.ExternalId
+        };
+
+        return Task.FromResult(savedFood);
+    }
+
+    public Task<bool> UpdateFoodAsync(Guid id, FoodEditor food, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(false);
+    }
+
+    public Task<bool> DeleteFoodAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(false);
+    }
 }
