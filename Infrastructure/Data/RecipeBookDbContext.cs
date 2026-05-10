@@ -1,4 +1,5 @@
 using Domain.Modules.Foods;
+using Domain.Modules.Recipes;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data;
@@ -6,6 +7,10 @@ namespace Infrastructure.Data;
 public sealed class RecipeBookDbContext(DbContextOptions<RecipeBookDbContext> options) : DbContext(options)
 {
     public DbSet<Food> Foods => Set<Food>();
+
+    public DbSet<Recipe> Recipes => Set<Recipe>();
+
+    public DbSet<RecipeIngredient> RecipeIngredients => Set<RecipeIngredient>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -29,5 +34,24 @@ public sealed class RecipeBookDbContext(DbContextOptions<RecipeBookDbContext> op
             nutrition.Property(x => x.SugarGrams).HasColumnName("SugarGrams").HasPrecision(10, 2);
             nutrition.Property(x => x.SodiumMilligrams).HasColumnName("SodiumMilligrams").HasPrecision(10, 2);
         });
+
+        var recipe = modelBuilder.Entity<Recipe>();
+
+        recipe.ToTable("Recipes");
+        recipe.HasKey(x => x.Id);
+        recipe.Property(x => x.Name).HasMaxLength(200).IsRequired();
+        recipe.Property(x => x.Description).HasMaxLength(500);
+        recipe.Property(x => x.Instructions);
+        recipe.HasMany(x => x.Ingredients)
+            .WithOne()
+            .HasForeignKey(x => x.RecipeId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        var ingredient = modelBuilder.Entity<RecipeIngredient>();
+
+        ingredient.ToTable("RecipeIngredients");
+        ingredient.HasKey(x => x.Id);
+        ingredient.Property(x => x.FoodName).HasMaxLength(200).IsRequired();
+        ingredient.Property(x => x.Unit).HasMaxLength(50).IsRequired();
     }
 }

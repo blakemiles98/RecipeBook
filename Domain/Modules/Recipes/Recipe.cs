@@ -2,7 +2,7 @@ namespace Domain.Modules.Recipes;
 
 public sealed class Recipe
 {
-    public Guid Id { get; init; } = Guid.NewGuid();
+    public Guid Id { get; set; } = Guid.NewGuid();
 
     public required string Name { get; set; }
 
@@ -16,9 +16,9 @@ public sealed class Recipe
 
     public int Servings { get; set; } = 1;
 
-    public List<RecipeIngredient> Ingredients { get; } = [];
+    public List<RecipeIngredient> Ingredients { get; set; } = [];
 
-    public DateTimeOffset CreatedAt { get; init; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
 }

@@ -2,7 +2,9 @@ namespace Domain.Modules.Recipes;
 
 public sealed class RecipeIngredient
 {
-    public Guid Id { get; init; } = Guid.NewGuid();
+    public Guid Id { get; set; } = Guid.NewGuid();
+
+    public Guid RecipeId { get; set; }
 
     public Guid FoodId { get; set; }
 

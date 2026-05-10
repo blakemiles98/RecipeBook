@@ -20,4 +20,34 @@ public sealed class RecipeLibraryPlaceholder : IRecipeLibrary
 
         return Task.FromResult(recipes);
     }
+
+    public Task<Recipe?> GetRecipeAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult<Recipe?>(null);
+    }
+
+    public Task<Recipe> CreateRecipeAsync(RecipeEditor recipe, CancellationToken cancellationToken = default)
+    {
+        var savedRecipe = new Recipe
+        {
+            Name = recipe.Name,
+            Description = recipe.Description,
+            Instructions = recipe.Instructions,
+            PrepMinutes = recipe.PrepMinutes,
+            CookMinutes = recipe.CookMinutes,
+            Servings = recipe.Servings
+        };
+
+        return Task.FromResult(savedRecipe);
+    }
+
+    public Task<bool> UpdateRecipeAsync(Guid id, RecipeEditor recipe, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(false);
+    }
+
+    public Task<bool> DeleteRecipeAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(false);
+    }
 }

@@ -135,6 +135,67 @@ h1:focus {
     margin-bottom: 1rem;
 }
 
+.recipe-editor {
+    margin-bottom: 1rem;
+}
+
+.wide-field {
+    color: #514840;
+    display: grid;
+    font-weight: 700;
+    gap: 0.4rem;
+    margin-top: 1rem;
+}
+
+.wide-field textarea {
+    border: 1px solid #cfc7bb;
+    border-radius: 6px;
+    font: inherit;
+    min-height: 5rem;
+    padding: 0.65rem;
+}
+
+.ingredient-header {
+    align-items: center;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    margin-top: 1rem;
+}
+
+.ingredient-header h3 {
+    font-size: 1rem;
+    margin: 0;
+}
+
+.ingredient-list {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.ingredient-row {
+    align-items: end;
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: minmax(220px, 1fr) minmax(110px, 0.3fr) minmax(120px, 0.4fr) auto;
+}
+
+.ingredient-row label {
+    color: #514840;
+    display: grid;
+    font-weight: 700;
+    gap: 0.4rem;
+}
+
+.ingredient-row input,
+.ingredient-row select {
+    border: 1px solid #cfc7bb;
+    border-radius: 6px;
+    font: inherit;
+    min-height: 2.5rem;
+    padding: 0.5rem 0.65rem;
+}
+
 .editor-actions {
     margin: 1rem 0 0;
 }
@@ -289,6 +350,10 @@ td span {
     }
 
     .search-row {
+        grid-template-columns: 1fr;
+    }
+
+    .ingredient-row {
         grid-template-columns: 1fr;
     }
 }

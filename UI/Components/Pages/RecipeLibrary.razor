@@ -1,29 +1,143 @@
 @page "/recipes"
+@rendermode InteractiveServer
+@using Application.Modules.Foods
 @using Application.Modules.Recipes
+@using Domain.Modules.Foods
 @using Domain.Modules.Recipes
+@inject IFoodCatalog FoodCatalog
 @inject IRecipeLibrary Recipes
+@inject IRecipeNutritionCalculator NutritionCalculator
 
 <PageTitle>Recipes</PageTitle>
 
 <h1>Recipes</h1>
 
 <section class="toolbar">
-    <button type="button" class="primary-action">Create recipe</button>
+    <button type="button" class="primary-action" @onclick="StartCreate">Create recipe</button>
 </section>
+
+@if (!string.IsNullOrWhiteSpace(_message))
+{
+    <p class="status-message">@_message</p>
+}
+
+@if (_showEditor)
+{
+    <section class="workspace-panel recipe-editor">
+        <h2>@(_editingRecipeId is null ? "Create recipe" : "Edit recipe")</h2>
+
+        @if (_errors.Count > 0)
+        {
+            <div class="validation-summary">
+                @foreach (var error in _errors)
+                {
+                    <p>@error</p>
+                }
+            </div>
+        }
+
+        <form @onsubmit="SaveRecipeAsync" @onsubmit:preventDefault="true">
+            <div class="settings-grid">
+                <label>
+                    Name
+                    <input @bind="_editor.Name" />
+                </label>
+                <label>
+                    Servings
+                    <input type="number" min="1" @bind="_editor.Servings" />
+                </label>
+                <label>
+                    Prep minutes
+                    <input type="number" min="0" @bind="_editor.PrepMinutes" />
+                </label>
+                <label>
+                    Cook minutes
+                    <input type="number" min="0" @bind="_editor.CookMinutes" />
+                </label>
+            </div>
+
+            <label class="wide-field">
+                Description
+                <textarea @bind="_editor.Description"></textarea>
+            </label>
+
+            <label class="wide-field">
+                Instructions
+                <textarea @bind="_editor.Instructions"></textarea>
+            </label>
+
+            <div class="ingredient-header">
+                <h3>Ingredients</h3>
+                <button type="button" @onclick="AddIngredient">Add ingredient</button>
+            </div>
+
+            @if (_availableFoods.Count == 0)
+            {
+                <p>Add foods before building recipes.</p>
+            }
+            else
+            {
+                <div class="ingredient-list">
+                    @for (var index = 0; index < _editor.Ingredients.Count; index++)
+                    {
+                        var ingredient = _editor.Ingredients[index];
+                        <div class="ingredient-row" @key="ingredient">
+                            <label>
+                                Food
+                                <select @bind="ingredient.FoodId">
+                                    <option value="@Guid.Empty">Select food</option>
+                                    @foreach (var food in _availableFoods)
+                                    {
+                                        <option value="@food.Id">@food.Name (@food.ServingSize @food.ServingUnit)</option>
+                                    }
+                                </select>
+                            </label>
+                            <label>
+                                Quantity
+                                <input type="number" step="0.01" min="0" @bind="ingredient.Quantity" />
+                            </label>
+                            <label>
+                                Unit
+                                <input @bind="ingredient.Unit" />
+                            </label>
+                            <button type="button" @onclick="() => RemoveIngredient(ingredient)">Remove</button>
+                        </div>
+                    }
+                </div>
+            }
+
+            <div class="toolbar editor-actions">
+                <button type="submit" class="primary-action">Save recipe</button>
+                <button type="button" @onclick="CancelEdit">Cancel</button>
+            </div>
+        </form>
+    </section>
+}
 
 @if (_recipes is null)
 {
     <p>Loading...</p>
+}
+else if (_recipes.Count == 0)
+{
+    <section class="workspace-panel">
+        <h2>No recipes yet</h2>
+        <p>Create recipes from saved foods to calculate calories and macros per serving.</p>
+    </section>
 }
 else
 {
     <div class="item-list">
         @foreach (var recipe in _recipes)
         {
-            <article class="list-item">
+            var summary = _summaries.GetValueOrDefault(recipe.Id, new RecipeNutritionSummary(0, 0, 0, 0));
+            var servingDivisor = recipe.Servings <= 0 ? 1 : recipe.Servings;
+
+            <article class="list-item recipe-item">
                 <div>
                     <h2>@recipe.Name</h2>
                     <p>@recipe.Description</p>
+                    <p>@recipe.Ingredients.Count ingredient(s)</p>
                 </div>
                 <dl>
                     <div>
@@ -31,14 +145,22 @@ else
                         <dd>@recipe.Servings</dd>
                     </div>
                     <div>
-                        <dt>Prep</dt>
-                        <dd>@recipe.PrepMinutes min</dd>
+                        <dt>Total cal</dt>
+                        <dd>@Math.Round(summary.Calories)</dd>
                     </div>
                     <div>
-                        <dt>Cook</dt>
-                        <dd>@recipe.CookMinutes min</dd>
+                        <dt>Per serving</dt>
+                        <dd>@Math.Round(summary.Calories / servingDivisor)</dd>
+                    </div>
+                    <div>
+                        <dt>Protein</dt>
+                        <dd>@Math.Round(summary.ProteinGrams / servingDivisor, 1) g</dd>
                     </div>
                 </dl>
+                <div class="row-actions">
+                    <button type="button" @onclick="() => StartEdit(recipe)">Edit</button>
+                    <button type="button" @onclick="() => DeleteRecipeAsync(recipe.Id)">Delete</button>
+                </div>
             </article>
         }
     </div>
@@ -46,9 +168,165 @@ else
 
 @code {
     private IReadOnlyCollection<Recipe>? _recipes;
+    private IReadOnlyCollection<Food> _availableFoods = [];
+    private readonly Dictionary<Guid, RecipeNutritionSummary> _summaries = [];
+    private RecipeEditor _editor = NewEditor();
+    private Guid? _editingRecipeId;
+    private bool _showEditor;
+    private string? _message;
+    private readonly List<string> _errors = [];
 
     protected override async Task OnInitializedAsync()
     {
+        _availableFoods = await FoodCatalog.GetRecentFoodsAsync();
+        await LoadRecipesAsync();
+    }
+
+    private async Task LoadRecipesAsync()
+    {
         _recipes = await Recipes.GetRecentRecipesAsync();
+        _summaries.Clear();
+
+        foreach (var recipe in _recipes)
+        {
+            _summaries[recipe.Id] = await NutritionCalculator.CalculateTotalAsync(recipe);
+        }
+    }
+
+    private void StartCreate()
+    {
+        _editor = NewEditor();
+        _editingRecipeId = null;
+        _showEditor = true;
+        _message = null;
+        _errors.Clear();
+    }
+
+    private void StartEdit(Recipe recipe)
+    {
+        _editor = RecipeEditor.FromRecipe(recipe);
+        _editingRecipeId = recipe.Id;
+        _showEditor = true;
+        _message = null;
+        _errors.Clear();
+    }
+
+    private void AddIngredient()
+    {
+        _editor.Ingredients.Add(new RecipeIngredientEditor
+        {
+            Quantity = 1,
+            Unit = "serving",
+            DisplayOrder = _editor.Ingredients.Count
+        });
+    }
+
+    private void RemoveIngredient(RecipeIngredientEditor ingredient)
+    {
+        _editor.Ingredients.Remove(ingredient);
+    }
+
+    private void CancelEdit()
+    {
+        _showEditor = false;
+        _editingRecipeId = null;
+        _editor = NewEditor();
+        _errors.Clear();
+    }
+
+    private async Task SaveRecipeAsync()
+    {
+        _errors.Clear();
+        HydrateIngredientNames();
+
+        if (!ValidateEditor())
+        {
+            return;
+        }
+
+        if (_editingRecipeId is Guid id)
+        {
+            var updated = await Recipes.UpdateRecipeAsync(id, _editor);
+            _message = updated ? "Recipe updated." : "Recipe was not found.";
+        }
+        else
+        {
+            await Recipes.CreateRecipeAsync(_editor);
+            _message = "Recipe created.";
+        }
+
+        CancelEdit();
+        await LoadRecipesAsync();
+    }
+
+    private async Task DeleteRecipeAsync(Guid id)
+    {
+        var deleted = await Recipes.DeleteRecipeAsync(id);
+        _message = deleted ? "Recipe deleted." : "Recipe was not found.";
+        await LoadRecipesAsync();
+    }
+
+    private void HydrateIngredientNames()
+    {
+        foreach (var ingredient in _editor.Ingredients)
+        {
+            var food = _availableFoods.FirstOrDefault(x => x.Id == ingredient.FoodId);
+            if (food is null)
+            {
+                continue;
+            }
+
+            ingredient.FoodName = food.Name;
+            if (string.IsNullOrWhiteSpace(ingredient.Unit))
+            {
+                ingredient.Unit = food.ServingUnit;
+            }
+        }
+    }
+
+    private bool ValidateEditor()
+    {
+        if (string.IsNullOrWhiteSpace(_editor.Name))
+        {
+            _errors.Add("Name is required.");
+        }
+
+        if (_editor.Servings <= 0)
+        {
+            _errors.Add("Servings must be greater than zero.");
+        }
+
+        if (_editor.Ingredients.Count == 0)
+        {
+            _errors.Add("Add at least one ingredient.");
+        }
+
+        if (_editor.Ingredients.Any(x => x.FoodId == Guid.Empty))
+        {
+            _errors.Add("Every ingredient needs a selected food.");
+        }
+
+        if (_editor.Ingredients.Any(x => x.Quantity <= 0))
+        {
+            _errors.Add("Ingredient quantities must be greater than zero.");
+        }
+
+        return _errors.Count == 0;
+    }
+
+    private static RecipeEditor NewEditor()
+    {
+        return new RecipeEditor
+        {
+            Servings = 1,
+            Ingredients =
+            [
+                new RecipeIngredientEditor
+                {
+                    Quantity = 1,
+                    Unit = "serving"
+                }
+            ]
+        };
     }
 }
