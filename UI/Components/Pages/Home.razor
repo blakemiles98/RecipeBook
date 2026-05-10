@@ -1,0 +1,51 @@
+@page "/"
+@using Application.Modules.Tracking
+@inject ITrackingSummary TrackingSummary
+
+<PageTitle>Dashboard</PageTitle>
+
+<h1>Dashboard</h1>
+
+@if (_summary is null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <section class="metric-grid" aria-label="Daily nutrition summary">
+        <div class="metric">
+            <span class="metric-label">Calories</span>
+            <strong>@_summary.Calories</strong>
+            <span>@_summary.CalorieGoal goal</span>
+        </div>
+        <div class="metric">
+            <span class="metric-label">Protein</span>
+            <strong>@_summary.ProteinGrams g</strong>
+            <span>@_summary.ProteinGoalGrams g goal</span>
+        </div>
+        <div class="metric">
+            <span class="metric-label">Carbs</span>
+            <strong>@_summary.CarbohydrateGrams g</strong>
+            <span>@_summary.CarbohydrateGoalGrams g goal</span>
+        </div>
+        <div class="metric">
+            <span class="metric-label">Fat</span>
+            <strong>@_summary.FatGrams g</strong>
+            <span>@_summary.FatGoalGrams g goal</span>
+        </div>
+    </section>
+
+    <section class="workspace-panel">
+        <h2>Today</h2>
+        <p>No food has been logged yet. The next branch will replace these placeholders with real storage and entry flows.</p>
+    </section>
+}
+
+@code {
+    private DailyNutritionSummary? _summary;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _summary = await TrackingSummary.GetTodayAsync();
+    }
+}

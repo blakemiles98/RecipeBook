@@ -4,9 +4,9 @@ Blazor and C# recipe book with calorie tracking.
 
 ## Architecture
 
-- `App/UI`: Blazor Web App host.
-- `App/Modules/Foods`: food catalog, nutrition facts, and API-backed food search.
-- `App/Modules/Recipes`: recipe definitions and ingredient composition.
-- `App/Modules/Tracking`: meal logging and daily calorie/macro summaries.
+- `UI`: Blazor Web App host.
+- `Domain`: domain models, organized by module under `Domain/Modules`.
+- `Application`: application services and use cases, organized by module under `Application/Modules`.
+- `Infrastructure`: persistence and external integrations, organized by module under `Infrastructure/Modules`.
 
 See `PROJECT_PLAN.md` for the build roadmap.
