@@ -58,6 +58,7 @@ appsettings.Development.local.json
 appsettings.Local.json
 appsettings.*.local.json
 wwwroot/service-worker-assets.js
+App_Data/
 
 # User secrets and local environment
 *.env

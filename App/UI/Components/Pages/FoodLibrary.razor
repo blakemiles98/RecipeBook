@@ -1,0 +1,62 @@
+@page "/foods"
+@using Foods.Application
+@inject IFoodCatalog FoodCatalog
+
+<PageTitle>Foods</PageTitle>
+
+<h1>Foods</h1>
+
+<section class="toolbar">
+    <button type="button" class="primary-action">Add food</button>
+    <button type="button">Search nutrition APIs</button>
+</section>
+
+@if (_foods is null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="table-shell">
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Serving</th>
+                    <th>Calories</th>
+                    <th>Protein</th>
+                    <th>Carbs</th>
+                    <th>Fat</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var food in _foods)
+                {
+                    <tr>
+                        <td>
+                            <strong>@food.Name</strong>
+                            @if (!string.IsNullOrWhiteSpace(food.Brand))
+                            {
+                                <span>@food.Brand</span>
+                            }
+                        </td>
+                        <td>@food.ServingSize @food.ServingUnit</td>
+                        <td>@food.Nutrition.Calories</td>
+                        <td>@food.Nutrition.ProteinGrams g</td>
+                        <td>@food.Nutrition.CarbohydrateGrams g</td>
+                        <td>@food.Nutrition.FatGrams g</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private IReadOnlyCollection<Foods.Domain.Food>? _foods;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _foods = await FoodCatalog.GetRecentFoodsAsync();
+    }
+}

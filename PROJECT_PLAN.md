@@ -10,6 +10,11 @@ The first version will be a Blazor app with a C# backend and a local relational 
 
 - Frontend: Blazor
 - Backend: ASP.NET Core / C#
+- App layout:
+  - `App/UI`
+  - `App/Modules/Foods`
+  - `App/Modules/Recipes`
+  - `App/Modules/Tracking`
 - Database: SQLite for local development
 - ORM: Entity Framework Core
 - Nutrition APIs:

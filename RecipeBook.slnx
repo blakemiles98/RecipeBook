@@ -1,0 +1,21 @@
+<Solution>
+  <Folder Name="/App/">
+    <Project Path="App/UI/UI.csproj" />
+  </Folder>
+  <Folder Name="/App/Modules/" />
+  <Folder Name="/App/Modules/Foods/">
+    <Project Path="App/Modules/Foods/Foods.Application/Foods.Application.csproj" />
+    <Project Path="App/Modules/Foods/Foods.Domain/Foods.Domain.csproj" />
+    <Project Path="App/Modules/Foods/Foods.Infrastructure/Foods.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/App/Modules/Recipes/">
+    <Project Path="App/Modules/Recipes/Recipes.Application/Recipes.Application.csproj" />
+    <Project Path="App/Modules/Recipes/Recipes.Domain/Recipes.Domain.csproj" />
+    <Project Path="App/Modules/Recipes/Recipes.Infrastructure/Recipes.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/App/Modules/Tracking/">
+    <Project Path="App/Modules/Tracking/Tracking.Application/Tracking.Application.csproj" />
+    <Project Path="App/Modules/Tracking/Tracking.Domain/Tracking.Domain.csproj" />
+    <Project Path="App/Modules/Tracking/Tracking.Infrastructure/Tracking.Infrastructure.csproj" />
+  </Folder>
+</Solution>
