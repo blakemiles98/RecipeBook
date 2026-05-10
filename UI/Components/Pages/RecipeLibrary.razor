@@ -1,0 +1,54 @@
+@page "/recipes"
+@using Application.Modules.Recipes
+@using Domain.Modules.Recipes
+@inject IRecipeLibrary Recipes
+
+<PageTitle>Recipes</PageTitle>
+
+<h1>Recipes</h1>
+
+<section class="toolbar">
+    <button type="button" class="primary-action">Create recipe</button>
+</section>
+
+@if (_recipes is null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="item-list">
+        @foreach (var recipe in _recipes)
+        {
+            <article class="list-item">
+                <div>
+                    <h2>@recipe.Name</h2>
+                    <p>@recipe.Description</p>
+                </div>
+                <dl>
+                    <div>
+                        <dt>Servings</dt>
+                        <dd>@recipe.Servings</dd>
+                    </div>
+                    <div>
+                        <dt>Prep</dt>
+                        <dd>@recipe.PrepMinutes min</dd>
+                    </div>
+                    <div>
+                        <dt>Cook</dt>
+                        <dd>@recipe.CookMinutes min</dd>
+                    </div>
+                </dl>
+            </article>
+        }
+    </div>
+}
+
+@code {
+    private IReadOnlyCollection<Recipe>? _recipes;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _recipes = await Recipes.GetRecentRecipesAsync();
+    }
+}

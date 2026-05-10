@@ -1,0 +1,228 @@
+html,
+body {
+    background: #f6f3ee;
+    color: #25211b;
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+}
+
+a,
+.btn-link {
+    color: #3568a8;
+}
+
+button {
+    background: #ffffff;
+    border: 1px solid #cfc7bb;
+    border-radius: 6px;
+    color: #25211b;
+    cursor: pointer;
+    font: inherit;
+    min-height: 2.5rem;
+    padding: 0.55rem 0.85rem;
+}
+
+button:hover {
+    background: #f7f4ee;
+}
+
+.primary-action {
+    background: #2f6f5e;
+    border-color: #2f6f5e;
+    color: #ffffff;
+}
+
+.primary-action:hover {
+    background: #285f51;
+}
+
+button:focus,
+a:focus,
+input:focus {
+    outline: 3px solid #9ab7d7;
+    outline-offset: 2px;
+}
+
+.content {
+    padding-top: 1.5rem;
+}
+
+h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 1rem;
+}
+
+h2 {
+    font-size: 1.1rem;
+    margin: 0 0 0.5rem;
+}
+
+h1:focus {
+    outline: none;
+}
+
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.metric-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    margin-bottom: 1.25rem;
+}
+
+.metric,
+.workspace-panel,
+.list-item,
+.table-shell {
+    background: #ffffff;
+    border: 1px solid #ddd5ca;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(30, 27, 23, 0.05);
+}
+
+.metric {
+    display: grid;
+    gap: 0.2rem;
+    padding: 1rem;
+}
+
+.metric strong {
+    font-size: 1.7rem;
+}
+
+.metric span {
+    color: #6c6258;
+}
+
+.metric-label {
+    color: #514840;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.workspace-panel {
+    padding: 1rem;
+}
+
+.table-shell {
+    overflow-x: auto;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+th,
+td {
+    border-bottom: 1px solid #ece5dc;
+    padding: 0.8rem;
+    text-align: left;
+    vertical-align: top;
+}
+
+th {
+    color: #5c5249;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+}
+
+td span {
+    color: #73695f;
+    display: block;
+    font-size: 0.9rem;
+}
+
+.item-list {
+    display: grid;
+    gap: 0.8rem;
+}
+
+.list-item {
+    align-items: center;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    padding: 1rem;
+}
+
+.list-item p {
+    margin: 0;
+}
+
+.list-item dl {
+    display: flex;
+    gap: 1rem;
+    margin: 0;
+}
+
+.list-item dt {
+    color: #6c6258;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+}
+
+.list-item dd {
+    margin: 0;
+}
+
+.settings-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    max-width: 760px;
+}
+
+.settings-grid label {
+    color: #514840;
+    display: grid;
+    font-weight: 700;
+    gap: 0.4rem;
+}
+
+.settings-grid input {
+    border: 1px solid #cfc7bb;
+    border-radius: 6px;
+    font: inherit;
+    min-height: 2.5rem;
+    padding: 0.5rem 0.65rem;
+}
+
+.valid.modified:not([type=checkbox]) {
+    outline: 1px solid #26b050;
+}
+
+.invalid {
+    outline: 1px solid #b32121;
+}
+
+.validation-message {
+    color: #b32121;
+}
+
+#blazor-error-ui {
+    background: #fff5b8;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+    display: none;
+    left: 0;
+    padding: 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+@media (max-width: 640px) {
+    .list-item,
+    .list-item dl {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
